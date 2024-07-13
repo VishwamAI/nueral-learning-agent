@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, devin/documentation-update/19960 ]
   pull_request:
     branches: [ main ]
 
