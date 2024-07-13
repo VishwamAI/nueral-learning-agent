@@ -22,7 +22,7 @@ def create_model(input_shape, action_space):
 
     return model
 
-def train_model(model, env, episodes=1000, gamma=0.99, epsilon=0.1):
+def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon=0.1):
     # Implement training loop with reinforcement learning
     for episode in range(episodes):
         state = env.reset()
@@ -50,9 +50,10 @@ def train_model(model, env, episodes=1000, gamma=0.99, epsilon=0.1):
 
             state = next_state
 
+        episode_rewards.append(total_reward)
         print(f"Episode: {episode+1}/{episodes}, Total Reward: {total_reward}")
 
-    return model
+    return model, episode_rewards
 
 def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5, alpha=0.01, beta=0.001, gamma=0.99):
     original_weights = model.get_weights()
@@ -142,8 +143,11 @@ def main():
     action_space = env.action_space.n
     model = create_model(state_shape, action_space)
 
+    # Initialize list to store episode rewards
+    episode_rewards = []
+
     # Train model
-    model = train_model(model, env)
+    model, episode_rewards = train_model(model, env, episode_rewards)
 
     # Implement meta-learning
     model = meta_learning_update(model, env)
@@ -170,6 +174,11 @@ def main():
         total_reward += episode_reward
 
     print(f"Evaluation complete. Average reward over {episodes} episodes: {total_reward / episodes}")
+
+    # Save episode rewards to a file
+    import json
+    with open('episode_rewards.json', 'w') as f:
+        json.dump(episode_rewards, f)
 
     # Close the environment
     env.close()
