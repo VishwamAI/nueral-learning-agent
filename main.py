@@ -92,11 +92,14 @@ def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5,
 
             # Compute gradient for meta-update
             final_loss = tf.keras.losses.mse(target_f, task_model(state))
-            gradients.append(tape.gradient(final_loss, task_model.trainable_variables))
+            task_gradients = tape.gradient(final_loss, task_model.trainable_variables)
+            if any(g is None for g in task_gradients):
+                print("Warning: Some gradients are None. This may indicate unused variables.")
+            gradients.append(task_gradients)
             del tape  # Delete the tape to free up resources
 
         # Meta-update
-        meta_gradients = [tf.reduce_mean([g[i] for g in gradients], axis=0) for i in range(len(gradients[0]))]
+        meta_gradients = [tf.reduce_mean([g[i] for g in gradients if g[i] is not None], axis=0) for i in range(len(gradients[0]))]
         for i, g in enumerate(meta_gradients):
             model.trainable_variables[i].assign_sub(beta * g)
 
