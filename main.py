@@ -55,7 +55,7 @@ def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon=
 
     return model, episode_rewards
 
-def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5, alpha=0.01, beta=0.001, gamma=0.99):
+def meta_learning_update(model, env, num_tasks=10, inner_steps=20, outer_steps=10, alpha=0.01, beta=0.001, gamma=0.99):
     original_weights = model.get_weights()
 
     for _ in range(outer_steps):
@@ -149,8 +149,8 @@ def main():
     # Train model
     model, episode_rewards = train_model(model, env, episode_rewards)
 
-    # Implement meta-learning
-    model = meta_learning_update(model, env)
+    # Implement meta-learning with increased complexity
+    model = meta_learning_update(model, env, num_tasks=10, inner_steps=20, outer_steps=10)
 
     # Implement self-play
     model = self_play(model, env)
