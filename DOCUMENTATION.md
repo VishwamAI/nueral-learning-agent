@@ -32,6 +32,10 @@ Our training process incorporates multiple advanced techniques:
 - Implemented in the `main()` function
 - Utilizes a persistent GradientTape: `tf.GradientTape(persistent=True)`
 - Runs for a specified number of episodes (1000)
+- Incorporates meta-learning with parameters:
+  - Number of tasks: 10
+  - Inner steps: 20
+  - Outer steps: 10
 
 ### Reinforcement Learning
 - Algorithm: Q-learning
@@ -70,19 +74,31 @@ A custom OpenAI Gym environment has been created for training:
 ## 7. Performance Metrics
 
 - Episode rewards are calculated and reported during training
-- Metrics are logged and can be used for performance analysis and visualization
+- Metrics are logged to 'episode_rewards.json' for performance analysis and visualization
+- Per-episode rewards provide insights into the agent's learning progress over time
+- The logged data can be used to generate learning curves and assess model performance
 
 ## 8. Training Parameters
 
 - Number of episodes: 1000
 - Epsilon (for epsilon-greedy policy): 0.1
 - Gamma (discount factor): 0.99
+- Meta-learning parameters:
+  - Number of tasks: 10
+  - Inner steps: 20
+  - Outer steps: 10
 
 ## 9. Known Issues and Future Improvements
 
 - The script is currently running on CPU due to lack of CUDA drivers, which may impact training speed
 - Recent improvements in gradient handling have addressed some stability issues, but further optimization may be needed
 - Ongoing monitoring of the training process is required to ensure consistent performance across episodes
-- Future work could include optimizing the model architecture, fine-tuning hyperparameters, and expanding the complexity of the custom environment
+- The training process is still ongoing, and further iterations may be needed to achieve optimal performance
+- Future work could include:
+  - Optimizing the model architecture
+  - Fine-tuning hyperparameters
+  - Expanding the complexity of the custom environment
+  - Implementing more advanced meta-learning techniques
+  - Exploring the use of GPU acceleration to improve training speed
 
 This documentation provides an overview of the neural learning agent's architecture, training process, and environment. For more detailed information, please refer to the source code and comments within the implementation files.
