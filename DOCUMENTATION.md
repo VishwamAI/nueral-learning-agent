@@ -31,12 +31,16 @@ Our training process incorporates multiple advanced techniques:
 ### Main Training Loop
 - Implemented in the `main()` function
 - Utilizes a persistent GradientTape: `tf.GradientTape(persistent=True)`
-- Runs for a specified number of episodes
+- Runs for a specified number of episodes (1000)
 
 ### Reinforcement Learning
 - Algorithm: Q-learning
 - Policy: Epsilon-greedy (ε = 0.1)
 - Discount factor (γ): 0.99
+
+### Gradient Handling
+- The `meta_learning_update` function includes logic to handle None gradients, improving stability and error reporting
+- Enhanced error handling and logging have been implemented to diagnose gradient computation issues during training
 
 ### Meta-learning
 - Adaptation to different tasks through rapid learning
@@ -77,7 +81,8 @@ A custom OpenAI Gym environment has been created for training:
 ## 9. Known Issues and Future Improvements
 
 - The script is currently running on CPU due to lack of CUDA drivers, which may impact training speed
-- Potential instabilities in the learning process may occur and require further investigation
+- Recent improvements in gradient handling have addressed some stability issues, but further optimization may be needed
+- Ongoing monitoring of the training process is required to ensure consistent performance across episodes
 - Future work could include optimizing the model architecture, fine-tuning hyperparameters, and expanding the complexity of the custom environment
 
 This documentation provides an overview of the neural learning agent's architecture, training process, and environment. For more detailed information, please refer to the source code and comments within the implementation files.

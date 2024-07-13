@@ -21,6 +21,11 @@ This document outlines the plan for demonstrating the capabilities of our neural
      - Average reward per episode
      - Success rate over multiple episodes
      - Learning curve (reward vs. episode number)
+     - Total reward per episode
+   - Highlight the training process running for 1000 episodes
+   - Provide guidance on interpreting the "Total Reward" metric:
+     - Higher total rewards indicate better overall performance
+     - Compare total rewards across episodes to assess learning progress
 
 4. Meta-Learning Demonstration
    - Show the agent's ability to adapt to slight variations in the environment
