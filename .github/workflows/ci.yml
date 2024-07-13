@@ -17,11 +17,13 @@ jobs:
       with:
         python-version: '3.8'
     - name: Install dependencies
+      working-directory: ${{ github.workspace }}
       run: |
         set -e
         python -m pip install --upgrade pip
         pip install -r requirements.txt -v
     - name: Run tests
+      working-directory: ${{ github.workspace }}
       run: |
         set -e
         # Add command to run tests here, e.g.:
