@@ -80,7 +80,7 @@ def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5,
                     target_f = task_model.predict(state)
                     target_f[0][action] = target
 
-                    with tf.GradientTape() as tape:
+                    with tf.GradientTape(persistent=True) as tape:
                         predictions = task_model(state)
                         loss = tf.keras.losses.mse(target_f, predictions)
 
@@ -93,6 +93,7 @@ def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5,
             # Compute gradient for meta-update
             final_loss = tf.keras.losses.mse(target_f, task_model(state))
             gradients.append(tape.gradient(final_loss, task_model.trainable_variables))
+            del tape  # Delete the tape to free up resources
 
         # Meta-update
         meta_gradients = [tf.reduce_mean([g[i] for g in gradients], axis=0) for i in range(len(gradients[0]))]
