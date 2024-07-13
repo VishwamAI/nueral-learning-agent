@@ -70,9 +70,12 @@ def train_model(model, env, episode_rewards, episodes=2000, gamma=0.99, epsilon_
     return model, episode_rewards
 
 def update_model(model, target_model, states, next_states, rewards, actions, gamma):
-    targets = rewards + gamma * np.max(target_model.predict(next_states), axis=1)
-    targets[np.arange(len(actions)), actions] = rewards + gamma * np.max(target_model.predict(next_states), axis=1)
-    model.fit(states, targets, epochs=1, verbose=0)
+    reshaped_next_states = next_states.reshape(-1, 64, 64, 3)
+    reshaped_states = states.reshape(-1, 64, 64, 3)
+    targets = rewards + gamma * np.max(target_model.predict(reshaped_next_states), axis=1)
+    targets = np.column_stack([targets] * model.output_shape[-1])
+    targets[np.arange(len(actions)), actions] = rewards + gamma * np.max(target_model.predict(reshaped_next_states), axis=1)
+    model.fit(reshaped_states, targets, epochs=1, verbose=0)
 
 
 
