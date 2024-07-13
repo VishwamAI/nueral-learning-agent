@@ -3,27 +3,51 @@ import numpy as np
 import gym
 from environments.custom_env import CustomEnv
 import copy
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Model
 
 def create_model(input_shape, action_space):
     # Define the neural network architecture for image processing
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=input_shape),
-        tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(64, activation='relu'),
-        tf.keras.layers.Dense(action_space, activation='linear')  # Output layer for RL
-    ])
+    inputs = Input(shape=input_shape)
+    x = Conv2D(64, (3, 3), activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2))(x)
+    x = Conv2D(128, (3, 3), activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2))(x)
+    x = Conv2D(256, (3, 3), activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Flatten()(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    x = Dense(128, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    outputs = Dense(action_space, activation='linear')(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
+
+    # Learning rate schedule
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=1e-3,
+        decay_steps=10000,
+        decay_rate=0.9)
+    optimizer = Adam(learning_rate=lr_schedule)
 
     # Compile the model
-    model.compile(optimizer='adam', loss='mse')  # Mean Squared Error for RL
+    model.compile(optimizer=optimizer, loss='mse')
 
     return model
 
-def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon=0.1):
-    # Implement training loop with reinforcement learning
+def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995):
+    # Implement training loop with reinforcement learning using Double DQN
+    target_model = tf.keras.models.clone_model(model)
+    target_model.set_weights(model.get_weights())
+
+    epsilon = epsilon_start
+    replay_buffer = []
+    batch_size = 32
+
     for episode in range(episodes):
         state = env.reset()
         state = np.reshape(state, [1, 64, 64, 3])  # Reshape state for model input
@@ -31,7 +55,7 @@ def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon=
         total_reward = 0
 
         while not done:
-            # Choose action using epsilon-greedy policy
+            # Choose action using epsilon-greedy policy with decaying epsilon
             if np.random.random() < epsilon:
                 action = env.action_space.sample()
             else:
@@ -42,16 +66,36 @@ def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon=
             next_state = np.reshape(next_state, [1, 64, 64, 3])
             total_reward += reward
 
-            # Update Q-value (simplified Q-learning update)
-            target = reward + gamma * np.max(model.predict(next_state))
-            target_f = model.predict(state)
-            target_f[0][action] = target
-            model.fit(state, target_f, epochs=1, verbose=0)
+            # Store experience in replay buffer
+            replay_buffer.append((state, action, reward, next_state, done))
+            if len(replay_buffer) > 10000:
+                replay_buffer.pop(0)
+
+            # Train on a batch of experiences
+            if len(replay_buffer) >= batch_size:
+                batch = np.random.choice(len(replay_buffer), batch_size, replace=False)
+                for i in batch:
+                    s, a, r, ns, d = replay_buffer[i]
+                    target = r
+                    if not d:
+                        # Double DQN update
+                        a_max = np.argmax(model.predict(ns)[0])
+                        target = r + gamma * target_model.predict(ns)[0][a_max]
+                    target_f = model.predict(s)
+                    target_f[0][a] = target
+                    model.fit(s, target_f, epochs=1, verbose=0)
 
             state = next_state
 
+        # Update target model
+        if episode % 10 == 0:
+            target_model.set_weights(model.get_weights())
+
+        # Decay epsilon
+        epsilon = max(epsilon_end, epsilon * epsilon_decay)
+
         episode_rewards.append(total_reward)
-        print(f"Episode: {episode+1}/{episodes}, Total Reward: {total_reward}")
+        print(f"Episode: {episode+1}/{episodes}, Total Reward: {total_reward}, Epsilon: {epsilon:.4f}")
 
     return model, episode_rewards
 
@@ -146,19 +190,25 @@ def main():
     # Initialize list to store episode rewards
     episode_rewards = []
 
-    # Train model
-    model, episode_rewards = train_model(model, env, episode_rewards)
+    # Train model with improved parameters
+    episodes = 2000  # Increased number of episodes
+    epsilon_start = 1.0
+    epsilon_end = 0.01
+    epsilon_decay = 0.995
+    model, episode_rewards = train_model(model, env, episode_rewards, episodes=episodes,
+                                         epsilon_start=epsilon_start, epsilon_end=epsilon_end,
+                                         epsilon_decay=epsilon_decay)
 
     # Implement meta-learning with increased complexity
-    model = meta_learning_update(model, env, num_tasks=10, inner_steps=20, outer_steps=10)
+    model = meta_learning_update(model, env, num_tasks=15, inner_steps=25, outer_steps=15)
 
-    # Implement self-play
-    model = self_play(model, env)
+    # Implement self-play with more episodes
+    model = self_play(model, env, episodes=200)
 
     # Evaluate results
     total_reward = 0
-    episodes = 100
-    for _ in range(episodes):
+    eval_episodes = 100
+    for _ in range(eval_episodes):
         state = env.reset()
         state = np.reshape(state, [1, 64, 64, 3])  # Updated reshaping
         done = False
@@ -173,12 +223,14 @@ def main():
 
         total_reward += episode_reward
 
-    print(f"Evaluation complete. Average reward over {episodes} episodes: {total_reward / episodes}")
+    print(f"Evaluation complete. Average reward over {eval_episodes} episodes: {total_reward / eval_episodes}")
 
-    # Save episode rewards to a file
+    # Save episode rewards and model
     import json
     with open('episode_rewards.json', 'w') as f:
         json.dump(episode_rewards, f)
+
+    model.save('trained_model.h5')
 
     # Close the environment
     env.close()
