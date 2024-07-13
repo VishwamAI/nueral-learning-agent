@@ -6,6 +6,9 @@ import copy
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model
+import argparse
+from tqdm import tqdm
+import json
 
 def create_model(input_shape, action_space):
     # Define the neural network architecture for image processing
@@ -178,59 +181,76 @@ def self_play(model, env, episodes=100, gamma=0.99):
 
     return model
 
-def main():
-    # Create or load environment
-    env = gym.make('CustomEnv-v0')
-
-    # Create model
-    state_shape = (64, 64, 3)  # Updated to match the expected input shape
-    action_space = env.action_space.n
-    model = create_model(state_shape, action_space)
-
-    # Initialize list to store episode rewards
-    episode_rewards = []
-
-    # Train model with improved parameters
-    episodes = 2000  # Increased number of episodes
-    epsilon_start = 1.0
-    epsilon_end = 0.01
-    epsilon_decay = 0.995
-    model, episode_rewards = train_model(model, env, episode_rewards, episodes=episodes,
-                                         epsilon_start=epsilon_start, epsilon_end=epsilon_end,
-                                         epsilon_decay=epsilon_decay)
-
-    # Implement meta-learning with increased complexity
-    model = meta_learning_update(model, env, num_tasks=15, inner_steps=25, outer_steps=15)
-
-    # Implement self-play with more episodes
-    model = self_play(model, env, episodes=200)
-
-    # Evaluate results
+def test_model(model, env, episodes=100):
     total_reward = 0
-    eval_episodes = 100
-    for _ in range(eval_episodes):
+    evaluation_rewards = []
+    for _ in tqdm(range(episodes), desc="Testing episodes"):
         state = env.reset()
-        state = np.reshape(state, [1, 64, 64, 3])  # Updated reshaping
-        done = False
+        state = np.reshape(state, [1, 64, 64, 3])
         episode_reward = 0
-
+        done = False
         while not done:
             action = np.argmax(model.predict(state))
             next_state, reward, done, _ = env.step(action)
-            next_state = np.reshape(next_state, [1, 64, 64, 3])  # Updated reshaping
-            episode_reward += reward
+            next_state = np.reshape(next_state, [1, 64, 64, 3])
             state = next_state
-
+            episode_reward += reward
         total_reward += episode_reward
+        evaluation_rewards.append(episode_reward)
 
-    print(f"Evaluation complete. Average reward over {eval_episodes} episodes: {total_reward / eval_episodes}")
+    avg_reward = total_reward / episodes
+    print(f"Evaluation complete. Average reward over {episodes} episodes: {avg_reward}")
 
-    # Save episode rewards and model
-    import json
-    with open('episode_rewards.json', 'w') as f:
-        json.dump(episode_rewards, f)
+    # Save evaluation results
+    with open('evaluation_rewards.json', 'w') as f:
+        json.dump(evaluation_rewards, f)
 
-    model.save('trained_model.h5')
+    return avg_reward, evaluation_rewards
+
+def main():
+    parser = argparse.ArgumentParser(description="Neural Learning Agent")
+    parser.add_argument("--test", action="store_true", help="Run in test mode")
+    parser.add_argument("--model", type=str, default="trained_model.h5", help="Path to the trained model")
+    parser.add_argument("--episodes", type=int, default=100, help="Number of episodes for testing")
+    args = parser.parse_args()
+
+    env = gym.make('CustomEnv-v0')
+
+    if args.test:
+        model = tf.keras.models.load_model(args.model)
+        test_model(model, env, episodes=args.episodes)
+    else:
+        # Create model
+        state_shape = (64, 64, 3)
+        action_space = env.action_space.n
+        model = create_model(state_shape, action_space)
+
+        # Initialize list to store episode rewards
+        episode_rewards = []
+
+        # Train model with improved parameters
+        episodes = 2000
+        epsilon_start = 1.0
+        epsilon_end = 0.01
+        epsilon_decay = 0.995
+        model, episode_rewards = train_model(model, env, episode_rewards, episodes=episodes,
+                                             epsilon_start=epsilon_start, epsilon_end=epsilon_end,
+                                             epsilon_decay=epsilon_decay)
+
+        # Implement meta-learning with increased complexity
+        model = meta_learning_update(model, env, num_tasks=15, inner_steps=25, outer_steps=15)
+
+        # Implement self-play with more episodes
+        model = self_play(model, env, episodes=200)
+
+        # Save episode rewards and model
+        with open('episode_rewards.json', 'w') as f:
+            json.dump(episode_rewards, f)
+
+        model.save('trained_model.h5')
+
+        # Evaluate the trained model
+        test_model(model, env)
 
     # Close the environment
     env.close()
