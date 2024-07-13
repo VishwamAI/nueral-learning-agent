@@ -22,7 +22,7 @@ def create_model(input_shape, action_space):
 
     return model
 
-def train_model(model, env, episodes=1000, gamma=0.99, epsilon=0.1):
+def train_model(model, env, episode_rewards, episodes=1000, gamma=0.99, epsilon=0.1):
     # Implement training loop with reinforcement learning
     for episode in range(episodes):
         state = env.reset()
@@ -50,9 +50,10 @@ def train_model(model, env, episodes=1000, gamma=0.99, epsilon=0.1):
 
             state = next_state
 
+        episode_rewards.append(total_reward)
         print(f"Episode: {episode+1}/{episodes}, Total Reward: {total_reward}")
 
-    return model
+    return model, episode_rewards
 
 def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5, alpha=0.01, beta=0.001, gamma=0.99):
     original_weights = model.get_weights()
@@ -80,7 +81,7 @@ def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5,
                     target_f = task_model.predict(state)
                     target_f[0][action] = target
 
-                    with tf.GradientTape() as tape:
+                    with tf.GradientTape(persistent=True) as tape:
                         predictions = task_model(state)
                         loss = tf.keras.losses.mse(target_f, predictions)
 
@@ -92,10 +93,14 @@ def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5,
 
             # Compute gradient for meta-update
             final_loss = tf.keras.losses.mse(target_f, task_model(state))
-            gradients.append(tape.gradient(final_loss, task_model.trainable_variables))
+            task_gradients = tape.gradient(final_loss, task_model.trainable_variables)
+            if any(g is None for g in task_gradients):
+                print("Warning: Some gradients are None. This may indicate unused variables.")
+            gradients.append(task_gradients)
+            del tape  # Delete the tape to free up resources
 
         # Meta-update
-        meta_gradients = [tf.reduce_mean([g[i] for g in gradients], axis=0) for i in range(len(gradients[0]))]
+        meta_gradients = [tf.reduce_mean([g[i] for g in gradients if g[i] is not None], axis=0) for i in range(len(gradients[0]))]
         for i, g in enumerate(meta_gradients):
             model.trainable_variables[i].assign_sub(beta * g)
 
@@ -138,8 +143,11 @@ def main():
     action_space = env.action_space.n
     model = create_model(state_shape, action_space)
 
+    # Initialize list to store episode rewards
+    episode_rewards = []
+
     # Train model
-    model = train_model(model, env)
+    model, episode_rewards = train_model(model, env, episode_rewards)
 
     # Implement meta-learning
     model = meta_learning_update(model, env)
@@ -166,6 +174,11 @@ def main():
         total_reward += episode_reward
 
     print(f"Evaluation complete. Average reward over {episodes} episodes: {total_reward / episodes}")
+
+    # Save episode rewards to a file
+    import json
+    with open('episode_rewards.json', 'w') as f:
+        json.dump(episode_rewards, f)
 
     # Close the environment
     env.close()
