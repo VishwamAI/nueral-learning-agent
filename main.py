@@ -5,11 +5,15 @@ from environments.custom_env import CustomEnv
 import copy
 
 def create_model(input_shape, action_space):
-    # Define the neural network architecture
+    # Define the neural network architecture for image processing
     model = tf.keras.Sequential([
-        tf.keras.layers.Dense(128, activation='relu', input_shape=input_shape),
+        tf.keras.layers.Input(shape=input_shape),
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+        tf.keras.layers.MaxPooling2D((2, 2)),
+        tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(64, activation='relu'),
-        tf.keras.layers.Dense(32, activation='relu'),
         tf.keras.layers.Dense(action_space, activation='linear')  # Output layer for RL
     ])
 
@@ -22,7 +26,7 @@ def train_model(model, env, episodes=1000, gamma=0.99, epsilon=0.1):
     # Implement training loop with reinforcement learning
     for episode in range(episodes):
         state = env.reset()
-        state = np.reshape(state, [1, -1])  # Reshape state for model input
+        state = np.reshape(state, [1, 64, 64, 3])  # Reshape state for model input
         done = False
         total_reward = 0
 
@@ -35,7 +39,7 @@ def train_model(model, env, episodes=1000, gamma=0.99, epsilon=0.1):
 
             # Take action and observe new state and reward
             next_state, reward, done, _ = env.step(action)
-            next_state = np.reshape(next_state, [1, -1])
+            next_state = np.reshape(next_state, [1, 64, 64, 3])
             total_reward += reward
 
             # Update Q-value (simplified Q-learning update)
@@ -64,13 +68,13 @@ def meta_learning_update(model, env, num_tasks=5, inner_steps=10, outer_steps=5,
             # Inner loop: adapt to the task
             for _ in range(inner_steps):
                 state = task_env.reset()
-                state = np.reshape(state, [1, -1])
+                state = np.reshape(state, [1, 64, 64, 3])  # Reshape state for model input
                 done = False
 
                 while not done:
                     action = np.argmax(task_model.predict(state))
                     next_state, reward, done, _ = task_env.step(action)
-                    next_state = np.reshape(next_state, [1, -1])
+                    next_state = np.reshape(next_state, [1, 64, 64, 3])  # Reshape next_state
 
                     target = reward + gamma * np.max(task_model.predict(next_state))
                     target_f = task_model.predict(state)
@@ -102,13 +106,13 @@ def self_play(model, env, episodes=100, gamma=0.99):
 
     for _ in range(episodes):
         state = env.reset()
-        state = np.reshape(state, [1, -1])
+        state = np.reshape(state, [1, 64, 64, 3])  # Reshape for image input
         done = False
 
         while not done:
             action = np.argmax(model.predict(state))
             next_state, reward, done, _ = env.step(action)
-            next_state = np.reshape(next_state, [1, -1])
+            next_state = np.reshape(next_state, [1, 64, 64, 3])  # Reshape for image input
 
             replay_buffer.append((state, action, reward, next_state, done))
 
@@ -130,7 +134,7 @@ def main():
     env = gym.make('CustomEnv-v0')
 
     # Create model
-    state_shape = env.observation_space.shape
+    state_shape = (64, 64, 3)  # Updated to match the expected input shape
     action_space = env.action_space.n
     model = create_model(state_shape, action_space)
 
@@ -148,14 +152,14 @@ def main():
     episodes = 100
     for _ in range(episodes):
         state = env.reset()
-        state = np.reshape(state, [1, -1])
+        state = np.reshape(state, [1, 64, 64, 3])  # Updated reshaping
         done = False
         episode_reward = 0
 
         while not done:
             action = np.argmax(model.predict(state))
             next_state, reward, done, _ = env.step(action)
-            next_state = np.reshape(next_state, [1, -1])
+            next_state = np.reshape(next_state, [1, 64, 64, 3])  # Updated reshaping
             episode_reward += reward
             state = next_state
 
