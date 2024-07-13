@@ -45,13 +45,74 @@ def calculate_performance_metrics(env, model, num_episodes=100):
 
 def demonstrate_meta_learning(env, model):
     """Show adaptation to environment variations."""
-    # Implement variations in the environment and test model's adaptation
-    pass
+    print("Original environment performance:")
+    orig_avg_reward, orig_success_rate = calculate_performance_metrics(env, model, num_episodes=50)
+    print(f"Average Reward: {orig_avg_reward:.2f}, Success Rate: {orig_success_rate:.2%}")
+
+    # Modify environment (e.g., change reward structure)
+    env.modify_reward_structure(new_reward_factor=0.5)
+
+    print("\nPerformance after environment modification:")
+    mod_avg_reward, mod_success_rate = calculate_performance_metrics(env, model, num_episodes=50)
+    print(f"Average Reward: {mod_avg_reward:.2f}, Success Rate: {mod_success_rate:.2%}")
+
+    # Allow model to adapt (simplified adaptation process)
+    for _ in range(100):
+        state = env.reset()
+        done = False
+        while not done:
+            action = np.argmax(model.predict(state.reshape(1, -1)))
+            next_state, reward, done, _ = env.step(action)
+            # Update model (simplified, in practice you'd use a proper training loop)
+            model.fit(state.reshape(1, -1), np.array([action]), epochs=1, verbose=0)
+            state = next_state
+
+    print("\nPerformance after adaptation:")
+    adapted_avg_reward, adapted_success_rate = calculate_performance_metrics(env, model, num_episodes=50)
+    print(f"Average Reward: {adapted_avg_reward:.2f}, Success Rate: {adapted_success_rate:.2%}")
+
+    return [orig_avg_reward, mod_avg_reward, adapted_avg_reward], [orig_success_rate, mod_success_rate, adapted_success_rate]
 
 def demonstrate_self_play(env, model):
     """Showcase agent vs. agent gameplay."""
-    # Implement self-play scenario
-    pass
+    num_games = 100
+    agent1_wins = 0
+    agent2_wins = 0
+    draws = 0
+
+    for _ in range(num_games):
+        state = env.reset()
+        done = False
+        while not done:
+            # Agent 1's turn
+            action1 = np.argmax(model.predict(state.reshape(1, -1)))
+            next_state, reward, done, _ = env.step(action1)
+            if done:
+                if reward > 0:
+                    agent1_wins += 1
+                elif reward < 0:
+                    agent2_wins += 1
+                else:
+                    draws += 1
+                break
+
+            # Agent 2's turn
+            action2 = np.argmax(model.predict((-next_state).reshape(1, -1)))  # Invert state for agent 2
+            state, reward, done, _ = env.step(action2)
+            if done:
+                if reward > 0:
+                    agent2_wins += 1
+                elif reward < 0:
+                    agent1_wins += 1
+                else:
+                    draws += 1
+
+    print(f"Self-play results over {num_games} games:")
+    print(f"Agent 1 wins: {agent1_wins}")
+    print(f"Agent 2 wins: {agent2_wins}")
+    print(f"Draws: {draws}")
+
+    return agent1_wins, agent2_wins, draws
 
 def visualize_results(rewards, success_rates):
     """Create plots for decision-making, state representations, and rewards."""
@@ -89,16 +150,13 @@ def main():
     print(f"Success Rate: {success_rate:.2%}")
 
     print("\nDemonstrating meta-learning...")
-    demonstrate_meta_learning(env, model)
+    meta_rewards, meta_success_rates = demonstrate_meta_learning(env, model)
 
     print("\nDemonstrating self-play...")
-    demonstrate_self_play(env, model)
+    agent1_wins, agent2_wins, draws = demonstrate_self_play(env, model)
 
     print("\nVisualizing results...")
-    # For demonstration, we'll use dummy data. In a real scenario, you'd collect this data during the demonstrations.
-    dummy_rewards = [run_single_episode(env, model, render=False)[0] for _ in range(100)]
-    dummy_success_rates = [calculate_performance_metrics(env, model, num_episodes=10)[1] for _ in range(100)]
-    visualize_results(dummy_rewards, dummy_success_rates)
+    visualize_results(meta_rewards, meta_success_rates)
 
 if __name__ == "__main__":
     main()
