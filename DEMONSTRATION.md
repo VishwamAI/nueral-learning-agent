@@ -6,11 +6,18 @@ This document outlines the plan for demonstrating the capabilities of our enhanc
 ## Demonstration Steps
 
 1. Environment Setup
+   - Ensure TensorFlow and Gym are installed
+   - Clone the repository and switch to the appropriate branch
    - Load the custom environment (CustomEnv-v0)
    - Initialize the neural network agent with the enhanced architecture
 
 2. Single Episode Walkthrough
-   - Run a single episode, showing:
+   - Run the `demo.py` script with the following command:
+     ```
+     python demo.py --model_path /path/to/trained/model --episodes 100
+     ```
+     Replace `/path/to/trained/model` with the actual path to the trained model file.
+   - The script will show:
      - Initial state
      - Agent's actions at each step
      - Resulting state and reward
@@ -33,7 +40,8 @@ This document outlines the plan for demonstrating the capabilities of our enhanc
      - Learning curve (reward vs. episode number)
      - Total reward per episode
    - Highlight the training process running for 2000 episodes
-   - Analyze the 'episode_rewards.json' file:
+   - Analyze the 'evaluation_rewards.json' file:
+     - The average reward over 100 evaluation episodes is 0.832432565099119
      - Visualize the per-episode rewards over time
      - Identify trends and patterns in the agent's performance
      - Discuss the impact of increased training episodes on performance
@@ -62,27 +70,19 @@ This document outlines the plan for demonstrating the capabilities of our enhanc
    - Highlight improvements in strategy over multiple self-play iterations
 
 7. Visualization
-   - Create plots or animations to visualize:
+   - Use `visualization.py` to create plots and animations of:
      - Agent's decision-making process
      - State representations
      - Reward accumulation over time
    - Analyze the logged per-episode rewards:
-     - Load and parse the 'episode_rewards.json' file
-     - Create a line plot showing rewards over 2000 episodes
+     - Load and parse the 'evaluation_rewards.json' file
+     - Create a line plot showing rewards over 100 evaluation episodes
      - Identify trends, learning progress, and potential plateaus
    - Interpret the results:
      - Discuss the overall learning curve
      - Highlight episodes with significant improvements
      - Analyze the impact of meta-learning on reward patterns
-     - Compare the learning curve to the previous 1000-episode version
-
-## Implementation Details
-
-To implement this demonstration, we will need to:
-
-1. Create a separate Python script (e.g., `demo.py`) that loads the trained model and runs through the demonstration steps.
-2. Implement logging and visualization functions to capture and display the relevant metrics and agent behaviors.
-3. Ensure the custom environment (CustomEnv-v0) supports a render mode that can be used for visualization purposes.
+     - Compare the learning curve to the previous version
 
 ## Running the Demonstration
 
@@ -96,7 +96,6 @@ This command will load the trained model and run the demonstration for 100 episo
 
 ## Next Steps
 
-- Implement the `demo.py` script with all new demonstration steps and visualization functions
-- Create necessary visualization functions for the enhanced analysis
+- Ensure the `demo.py` script implements all demonstration steps and visualization functions
 - Test the demonstration with the trained model using the new architecture
 - Prepare a presentation or video showcasing the agent's improved capabilities
