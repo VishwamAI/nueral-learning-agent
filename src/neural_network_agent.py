@@ -101,3 +101,6 @@ class NeuralNetworkAgent:
 
     def load_model(self, filepath):
         self.model = tf.keras.models.load_model(filepath)
+
+    def get_model_parameters(self):
+        return self.model.get_weights()
