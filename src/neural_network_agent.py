@@ -18,6 +18,17 @@ class NeuralNetworkAgent:
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss='mse')
         return model
 
+    def act(self, state):
+        state = np.expand_dims(state, axis=0)
+        q_values = self.model.predict(state)
+        return np.argmax(q_values[0])
+
+    def learn(self, initial_state, action, reward, next_state, done):
+        initial_state = np.expand_dims(initial_state, axis=0)
+        next_state = np.expand_dims(next_state, axis=0)
+        gamma = 0.99  # You might want to make this a class attribute or parameter
+        self.update(self.model, initial_state, next_state, [reward], [action], gamma)
+
     def train(self, env, episodes=2000, gamma=0.99, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995, batch_size=32):
         epsilon = epsilon_start
         memory = []
@@ -96,3 +107,6 @@ class NeuralNetworkAgent:
 
     def load_model(self, filepath):
         self.model = tf.keras.models.load_model(filepath)
+
+    def get_model_parameters(self):
+        return self.model.get_weights()

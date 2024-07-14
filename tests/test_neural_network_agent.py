@@ -1,13 +1,16 @@
 import unittest
+import numpy as np
 from src.neural_network_agent import NeuralNetworkAgent
-from environments.custom_env import CustomEnv
+from src.environments.custom_env import CustomEnv
 
 class TestNeuralNetworkAgent(unittest.TestCase):
 
     def setUp(self):
         # Set up for each test
-        self.agent = NeuralNetworkAgent()
         self.env = CustomEnv()
+        input_shape = self.env.observation_space.shape
+        action_space = self.env.action_space.n
+        self.agent = NeuralNetworkAgent(input_shape, action_space)
 
     def test_initialization(self):
         # Test initialization of the neural network model
@@ -18,7 +21,7 @@ class TestNeuralNetworkAgent(unittest.TestCase):
         # Test the agent's ability to take actions
         state = self.env.reset()
         action = self.agent.act(state)
-        self.assertIn(action, self.env.action_space, "Action taken is not within the environment's action space")
+        self.assertIn(action, range(self.env.action_space.n), "Action taken is not within the environment's action space")
 
     def test_environment_interaction(self):
         # Test the agent's interaction with the Gym environment
@@ -27,7 +30,8 @@ class TestNeuralNetworkAgent(unittest.TestCase):
         state, reward, done, info = self.env.step(action)
         self.assertIsNotNone(state, "Environment did not return a new state after taking an action")
         self.assertIsInstance(reward, (int, float), "Reward is not a numeric value")
-        self.assertIsInstance(done, bool, "Done flag is not a boolean")
+        print(f"Done flag: {done}, Type: {type(done)}")
+        self.assertTrue(isinstance(done, (bool, np.bool_)), "Done flag is not a boolean")
 
     def test_learning(self):
         # Test the learning process of the agent
@@ -43,7 +47,7 @@ class TestNeuralNetworkAgent(unittest.TestCase):
 
         # Check if the model parameters have changed after learning
         updated_params = self.agent.get_model_parameters()
-        self.assertNotEqual(initial_params, updated_params, "Agent's model parameters did not change after learning")
+        self.assertFalse(np.array_equal(initial_params, updated_params), "Agent's model parameters did not change after learning")
 
 if __name__ == '__main__':
     unittest.main()
