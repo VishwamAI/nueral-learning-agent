@@ -1,0 +1,31 @@
+name: New Python Application CI
+
+on:
+  push:
+    branches: [ main, devin/fix-workflow-issue/11779 ]
+  pull_request:
+    branches: [ main, devin/fix-workflow-issue/11779 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Display installed packages
+      run: |
+        pip list
+    - name: Run tests
+      run: |
+        python -m unittest discover -v -s tests
