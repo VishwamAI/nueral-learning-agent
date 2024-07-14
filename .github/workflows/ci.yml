@@ -1,6 +1,7 @@
 name: Python Application CI
 # Trigger workflow rerun to verify Python version matrix.
 # Triggering a new workflow run to verify correct Python versions
+# Adding a new comment to force a workflow run and ensure latest configuration is used
 
 on:
   push:
