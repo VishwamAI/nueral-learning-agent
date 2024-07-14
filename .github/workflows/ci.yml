@@ -2,9 +2,9 @@ name: Python Application CI
 
 on:
   push:
-    branches: [ main, devin/documentation-update/19960 ]
+    branches: [ main, devin/fix-workflow-issue/11779 ]
   pull_request:
-    branches: [ main, devin/documentation-update/19960 ]
+    branches: [ main, devin/fix-workflow-issue/11779 ]
 
 jobs:
   build:
