@@ -1,4 +1,5 @@
 name: Python Application CI (Fixed)
+# Trigger workflow rerun to verify Python version matrix.
 
 on:
   push:
