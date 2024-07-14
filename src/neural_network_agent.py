@@ -18,6 +18,11 @@ class NeuralNetworkAgent:
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss='mse')
         return model
 
+    def act(self, state):
+        state = np.expand_dims(state, axis=0)
+        q_values = self.model.predict(state)
+        return np.argmax(q_values[0])
+
     def train(self, env, episodes=2000, gamma=0.99, epsilon_start=1.0, epsilon_end=0.01, epsilon_decay=0.995, batch_size=32):
         epsilon = epsilon_start
         memory = []
