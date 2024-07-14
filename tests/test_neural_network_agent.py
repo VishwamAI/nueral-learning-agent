@@ -47,7 +47,7 @@ class TestNeuralNetworkAgent(unittest.TestCase):
 
         # Check if the model parameters have changed after learning
         updated_params = self.agent.get_model_parameters()
-        self.assertNotEqual(initial_params, updated_params, "Agent's model parameters did not change after learning")
+        self.assertFalse(np.array_equal(initial_params, updated_params), "Agent's model parameters did not change after learning")
 
 if __name__ == '__main__':
     unittest.main()
