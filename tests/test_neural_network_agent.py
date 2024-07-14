@@ -29,6 +29,7 @@ class TestNeuralNetworkAgent(unittest.TestCase):
         state, reward, done, info = self.env.step(action)
         self.assertIsNotNone(state, "Environment did not return a new state after taking an action")
         self.assertIsInstance(reward, (int, float), "Reward is not a numeric value")
+        print(f"Done flag: {done}, Type: {type(done)}")
         self.assertIsInstance(done, bool, "Done flag is not a boolean")
 
     def test_learning(self):
