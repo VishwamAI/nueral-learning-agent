@@ -1,6 +1,6 @@
 import unittest
-from src.neural_network_agent import NeuralNetworkAgent
-from environments.custom_env import CustomEnv
+from neural_network_agent import NeuralNetworkAgent
+from custom_env import CustomEnv
 
 class TestNeuralNetworkAgent(unittest.TestCase):
 
