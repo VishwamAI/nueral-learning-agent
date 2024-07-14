@@ -15,7 +15,8 @@ To set up the project, follow these steps:
 Dependencies include:
 - TensorFlow
 - Gym
-- [List any other major dependencies]
+- NumPy
+- Matplotlib
 
 ## Usage
 To train the agent:
@@ -31,8 +32,8 @@ python demo.py
 For a detailed walkthrough of the agent's functionality, refer to the `DEMONSTRATION.md` file.
 
 ## Project Structure
-- `src/`: Contains the main code files for the neural learning agent
-- `evaluations/`: Stores performance metrics and evaluation results
+- `src/`: Contains the main code files for the neural learning agent, including the neural network model, training and evaluation scripts, and the custom Gym environment.
+- `evaluations/`: Stores performance metrics and evaluation results, as well as any visualizations of the agent's learning progress.
 
 ## Contributing
 Contributions to this project are welcome! Please note that we have a GitHub Actions workflow set up for Continuous Integration (CI) to ensure code quality.
@@ -47,7 +48,10 @@ To contribute:
 All pull requests will be reviewed by the project maintainers.
 
 ## License
-[Include appropriate license information here]
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Additional Resources
+- [Devin Run](https://preview.devin.ai/devin/88e096bd2cfc4484aa4aa1014eb56004): View the Devin AI assistant run for this project.
 
 ## Acknowledgments
 This project draws inspiration from the work of Ilya Sutskever on deep learning and reinforcement learning. We acknowledge his contributions to the field, which have significantly influenced the development of this neural learning agent.
