@@ -8,6 +8,7 @@ name: Python Application CI
 # Triggering a new workflow run to verify correct Python versions - 2024-07-14 10:30:00 UTC
 # Triggering a new workflow run to resolve unexpected Python version issue - 2024-07-14 11:15:00 UTC
 # Triggering a new workflow run to verify correct Python versions - 2024-07-14 12:00:00 UTC
+# Adding cache clearing steps and updating Python setup - 2024-07-14 13:00:00 UTC
 
 on:
   push:
@@ -20,17 +21,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, 3.10, 3.11]
+        python-version: ['3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v4
+    - name: Clear GitHub Actions cache
+      run: |
+        sudo rm -rf /opt/hostedtoolcache/Python
+        sudo rm -rf $HOME/.cache/pip
+    - name: Check available Python versions
+      run: |
+        ls -l /opt/hostedtoolcache/Python || echo "No Python versions found in cache"
+        python3 --version || echo "Python3 not found"
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Display Python version
-      run: |
-        python --version
+    - name: Verify Python version
+      run: python --version
     - name: Install core dependencies
       run: |
         python -m pip install --upgrade pip
