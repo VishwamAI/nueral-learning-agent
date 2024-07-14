@@ -1,8 +1,4 @@
 name: Python Application CI
-# Trigger workflow rerun to verify Python version matrix.
-# Triggering a new workflow run to verify correct Python versions
-# Adding a new comment to force a workflow run and ensure latest configuration is used
-# Triggering a new workflow run to verify the issue with Python 3.1 has been resolved
 
 on:
   push:
@@ -20,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
