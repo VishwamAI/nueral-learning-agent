@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from src.neural_network_agent import NeuralNetworkAgent
 from src.environments.custom_env import CustomEnv
 
@@ -30,7 +31,7 @@ class TestNeuralNetworkAgent(unittest.TestCase):
         self.assertIsNotNone(state, "Environment did not return a new state after taking an action")
         self.assertIsInstance(reward, (int, float), "Reward is not a numeric value")
         print(f"Done flag: {done}, Type: {type(done)}")
-        self.assertIsInstance(done, bool, "Done flag is not a boolean")
+        self.assertTrue(isinstance(done, (bool, np.bool_)), "Done flag is not a boolean")
 
     def test_learning(self):
         # Test the learning process of the agent
