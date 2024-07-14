@@ -1,4 +1,4 @@
-name: New Python Application CI
+name: Clear Cache and Run CI
 
 on:
   push:
@@ -14,18 +14,21 @@ jobs:
         python-version: [3.9, 3.10, 3.11]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+    - name: Clear cache
+      run: |
+        rm -rf ~/.cache/pip
+        rm -rf ~/.cache/pipenv
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Display Python version
+      run: python -V
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Display installed packages
-      run: |
-        pip list
     - name: Run tests
       run: |
         python -m unittest discover -v -s tests
