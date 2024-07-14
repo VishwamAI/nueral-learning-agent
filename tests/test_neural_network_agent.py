@@ -6,8 +6,10 @@ class TestNeuralNetworkAgent(unittest.TestCase):
 
     def setUp(self):
         # Set up for each test
-        self.agent = NeuralNetworkAgent()
         self.env = CustomEnv()
+        input_shape = self.env.observation_space.shape
+        action_space = self.env.action_space.n
+        self.agent = NeuralNetworkAgent(input_shape, action_space)
 
     def test_initialization(self):
         # Test initialization of the neural network model
@@ -18,7 +20,7 @@ class TestNeuralNetworkAgent(unittest.TestCase):
         # Test the agent's ability to take actions
         state = self.env.reset()
         action = self.agent.act(state)
-        self.assertIn(action, self.env.action_space, "Action taken is not within the environment's action space")
+        self.assertIn(action, range(self.env.action_space.n), "Action taken is not within the environment's action space")
 
     def test_environment_interaction(self):
         # Test the agent's interaction with the Gym environment
